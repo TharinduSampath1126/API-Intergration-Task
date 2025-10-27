@@ -1,23 +1,12 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
+import { Eye, Edit, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { EditUserForm } from './edit-user-form';
+import { usePostStore } from '@/store/postStore';
+import { UserDetailsDialog } from './user-details-dialog';
 
 export const UserSchema = z.object({
   id: z.number().min(1, 'ID must be greater than 0'),
@@ -33,112 +22,110 @@ export const UserSchema = z.object({
     .number()
     .min(1, 'Age must be greater than 0')
     .max(120, 'Age must be less than 120'),
-  email: z.string().email('Invalid email format'),
-  phone: z.string().min(1, 'Phone is required'),
-  birthDate: z.string().min(1, 'Birth date is required'),
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Invalid email format')
+    .refine(
+      (email) => {
+        // More strict email validation
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailRegex.test(email);
+      },
+      { message: 'Please enter a valid email address' }
+    )
+    .refine(
+      (email) => {
+        // Check for common email providers or allow any domain
+        const domain = email.split('@')[1];
+        return domain && domain.includes('.');
+      },
+      { message: 'Email must have a valid domain' }
+    ),
+  phone: z
+    .string()
+    .min(1, 'Phone number is required')
+    .refine(
+      (phone) => {
+        // Allow phone numbers with country codes (+1, +94, etc.) and various formats
+        const phoneRegex = /^(\+\d{1,3}[- ]?)?\(?\d{1,4}\)?[- ]?\d{1,4}[- ]?\d{1,9}$/;
+        return phoneRegex.test(phone.replace(/\s/g, ''));
+      },
+      { message: 'Please enter a valid phone number (e.g., +1 123 456 7890 or +94 77 123 4567)' }
+    ),
+  birthDate: z
+    .string()
+    .min(1, 'Birth date is required')
+    .refine(
+      (date) => {
+        const selectedDate = new Date(date);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999); // Set to end of today
+        return selectedDate <= today;
+      },
+      { message: 'Birth date cannot be in the future' }
+    ),
 });
 
 export type User = z.infer<typeof UserSchema>;
 
+
 function ActionsCell({ user }: { user: User }) {
   const [showDialog, setShowDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const { updatePost, removePost } = usePostStore();
+
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to delete this user?')) {
+      removePost(user.id);
+    }
+  };
+
+  const handleUpdateUser = (updatedUser: User) => {
+    updatePost(updatedUser);
+  };
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => setShowDialog(true)}>
-            View details
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
-            Edit user
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowDialog(true)}
+          className="h-8 w-8 p-0"
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowEditDialog(true)}
+          className="h-8 w-8 p-0"
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleDelete}
+          className="h-8 w-8 p-0 text-red-600 hover:text-red-800"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
 
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <strong>ID:</strong> {user.id}
-            </div>
-            <div>
-              <strong>First Name:</strong> {user.firstName}
-            </div>
-            <div>
-              <strong>Last Name:</strong> {user.lastName}
-            </div>
-            <div>
-              <strong>Age:</strong> {user.age}
-            </div>
-            <div>
-              <strong>Email:</strong> {user.email}
-            </div>
-            <div>
-              <strong>Phone:</strong> {user.phone}
-            </div>
-            <div>
-              <strong>Birth Date:</strong> {user.birthDate}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <UserDetailsDialog
+        user={user}
+        open={showDialog}
+        onOpenChange={setShowDialog}
+      />
 
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-          </DialogHeader>
-          <form className="space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium">ID</label>
-              <Input defaultValue={user.id} disabled />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                First Name
-              </label>
-              <Input defaultValue={user.firstName} />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                Last Name
-              </label>
-              <Input defaultValue={user.lastName} />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Age</label>
-              <Input type="number" defaultValue={user.age} />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Email</label>
-              <Input type="email" defaultValue={user.email} />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Phone</label>
-              <Input defaultValue={user.phone} />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                Birth Date
-              </label>
-              <Input type="date" defaultValue={user.birthDate} />
-            </div>
-            <Button type="submit">Update User</Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <EditUserForm
+        user={user}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onUpdateUser={handleUpdateUser}
+      />
     </>
   );
 }
@@ -174,6 +161,7 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     id: 'actions',
+    header: 'Actions',
     cell: ({ row }) => <ActionsCell user={row.original} />,
   },
 ];

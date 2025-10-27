@@ -5,52 +5,50 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { BirthDateAgePicker } from '@/components/ui/birth-date-age-picker';
 import { PhoneInput } from '@/components/ui/phone-input';
-import { UserSchema } from './columns';
+import { UserSchema, User } from './columns';
+// If you move UserSchema/User to a shared file, update this import accordingly.
 import * as React from 'react';
 import { format } from 'date-fns';
 
-interface AddPostFormProps {
-  onAddData?: (newData: any) => void;
+interface EditUserFormProps {
+  user: User;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdateUser?: (updatedUser: User) => void;
 }
 
-export function AddPostForm({ onAddData }: AddPostFormProps) {
+export function EditUserForm({ user, open, onOpenChange, onUpdateUser }: EditUserFormProps) {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
-  const [open, setOpen] = React.useState(false);
-  const [birthDate, setBirthDate] = React.useState<Date>();
-  const [age, setAge] = React.useState<number>();
+  const [birthDate, setBirthDate] = React.useState<Date | undefined>();
+  const [age, setAge] = React.useState<number | undefined>();
   const [phone, setPhone] = React.useState<string>('');
 
   React.useEffect(() => {
-    // Clear any lingering errors when dialog is closed
-    if (!open) setErrors({});
-  }, [open]);
+    if (open && user) {
+      setBirthDate(new Date(user.birthDate));
+      setAge(user.age);
+      setPhone(user.phone);
+      setErrors({});
+    }
+  }, [open, user]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>Add Data</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New User</DialogTitle>
+          <DialogTitle>Edit User</DialogTitle>
         </DialogHeader>
         <form
-          onSubmit={async (e) => {
+          onSubmit={(e) => {
             e.preventDefault();
             const formData = new FormData(e.target as HTMLFormElement);
-            const birthDateStr = birthDate
-              ? format(birthDate, 'yyyy-MM-dd')
-              : '';
-
-            const rawId = Number(formData.get('id'));
-            const finalId = !rawId || Number.isNaN(rawId) ? Date.now() : rawId;
+            const birthDateStr = birthDate ? format(birthDate, 'yyyy-MM-dd') : '';
 
             const rawData = {
-              id: finalId,
+              id: user.id,
               firstName: formData.get('firstName') as string,
               lastName: formData.get('lastName') as string,
               age: age || 0,
@@ -61,18 +59,9 @@ export function AddPostForm({ onAddData }: AddPostFormProps) {
 
             try {
               const validatedData = UserSchema.parse(rawData);
-              console.log('AddPostForm: validated data, calling onAddData', validatedData);
-              // Support sync or async onAddData handlers
-              if (onAddData) {
-                await Promise.resolve(onAddData(validatedData));
-              }
-              // Only clear and close after successful add
-              (e.target as HTMLFormElement).reset();
-              setBirthDate(undefined);
-              setAge(undefined);
-              setPhone('');
+              onUpdateUser?.(validatedData);
               setErrors({});
-              setOpen(false);
+              onOpenChange(false);
             } catch (error: any) {
               const fieldErrors: Record<string, string> = {};
               if (error.issues) {
@@ -80,7 +69,6 @@ export function AddPostForm({ onAddData }: AddPostFormProps) {
                   fieldErrors[err.path[0]] = err.message;
                 });
               }
-              console.log('Validation errors:', fieldErrors);
               setErrors(fieldErrors);
             }
           }}
@@ -88,18 +76,13 @@ export function AddPostForm({ onAddData }: AddPostFormProps) {
         >
           <div>
             <label className="mb-1 block text-sm font-medium">ID</label>
-            <Input
-              name="id"
-              type="number"
-              placeholder="Enter ID"
-              error={errors.id}
-            />
+            <Input value={user.id} disabled className="bg-gray-50" />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">First Name</label>
             <Input
               name="firstName"
-              placeholder="Enter First Name"
+              defaultValue={user.firstName}
               error={errors.firstName}
             />
           </div>
@@ -107,7 +90,7 @@ export function AddPostForm({ onAddData }: AddPostFormProps) {
             <label className="mb-1 block text-sm font-medium">Last Name</label>
             <Input
               name="lastName"
-              placeholder="Enter Last Name"
+              defaultValue={user.lastName}
               error={errors.lastName}
             />
           </div>
@@ -116,7 +99,7 @@ export function AddPostForm({ onAddData }: AddPostFormProps) {
             <Input
               name="email"
               type="email"
-              placeholder="Enter Email"
+              defaultValue={user.email}
               error={errors.email}
             />
           </div>
@@ -138,7 +121,7 @@ export function AddPostForm({ onAddData }: AddPostFormProps) {
             className="space-y-4"
           />
           <Button type="submit" className="w-full">
-            Add User
+            Update User
           </Button>
         </form>
       </DialogContent>
