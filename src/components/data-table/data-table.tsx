@@ -2,24 +2,9 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import TableColumnsDropdown from './table-columns-dropdown';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
-import { UserForm } from './add-post-form';
-
-// ...existing code...
+import RowsPerPageSelect from '@/components/customUi/rows-per-page-select';
+import PaginationControls from '@/components/customUi/pagination';
+import { UserForm } from '@/components/form/add-post-form';
 
 import {
   ColumnDef,
@@ -142,10 +127,7 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   No results.
                 </TableCell>
               </TableRow>
@@ -156,53 +138,18 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between py-4">
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Rows per page</p>
-          <Select
+          <RowsPerPageSelect
             value={`${table.getState().pagination.pageSize}`}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value));
-            }}
-          >
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={table.getState().pagination.pageSize} />
-            </SelectTrigger>
-            <SelectContent side="top">
-              {[10, 20, 30, 40, 50].map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`}>
-                  {pageSize}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onValueChange={(value) => table.setPageSize(Number(value))}
+            className="h-8 w-[70px]"
+          />
         </div>
         <div className="flex justify-end">
-          <Pagination>
-            <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              />
-            </PaginationItem>
-            {Array.from({ length: table.getPageCount() }, (_, i) => (
-              <PaginationItem key={i}>
-                <PaginationLink
-                  onClick={() => table.setPageIndex(i)}
-                  isActive={table.getState().pagination.pageIndex === i}
-                >
-                  {i + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              />
-            </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <PaginationControls table={table} />
         </div>
       </div>
     </div>
   );
 }
+
+export default DataTable;

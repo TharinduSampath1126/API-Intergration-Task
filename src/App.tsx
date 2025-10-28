@@ -1,4 +1,4 @@
-import DemoPage from './components/form/page';
+import DemoPage from './pages/pageA';
 
 function App() {
   return (

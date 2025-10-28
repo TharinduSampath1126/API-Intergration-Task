@@ -19,7 +19,7 @@ export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialo
         <DialogHeader>
           <DialogTitle>User Details</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 ">
           <div>
             <strong>ID:</strong> {user.id}
           </div>

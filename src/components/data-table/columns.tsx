@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
-import { UserForm } from './add-post-form';
+import { UserForm } from '@/components/form/add-post-form';
 import { usePostStore } from '@/store/postStore';
-import { UserDetailsDialog } from './user-details-dialog';
+import { UserDetailsDialog } from '@/components/form/user-details-dialog';
 
 export const UserSchema = z.object({
   id: z.number().min(1, 'ID must be greater than 0'),
