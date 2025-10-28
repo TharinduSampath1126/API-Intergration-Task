@@ -1,11 +1,7 @@
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import TableColumnsDropdown from './table-columns-dropdown';
 import {
   Select,
   SelectContent,
@@ -21,9 +17,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { AddPostForm } from './add-post-form';
+import { UserForm } from './add-post-form';
 
-import * as React from 'react';
+// ...existing code...
 
 import {
   ColumnDef,
@@ -58,14 +54,10 @@ export function DataTable<TData, TValue>({
   data,
   onAddData,
 }: DataTableProps<TData, TValue>) {
+  const [addOpen, setAddOpen] = React.useState(false);
   const [sorting, setSorting] = React.useState<SortingState>([]);
-
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
 
   const table = useReactTable({
     data,
@@ -99,34 +91,16 @@ export function DataTable<TData, TValue>({
           className="max-w-sm"
         />
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <TableColumnsDropdown table={table} />
         <div className="ml-2">
-          <AddPostForm onAddData={onAddData} />
+          <UserForm
+            open={addOpen}
+            onOpenChange={setAddOpen}
+            onSubmit={async (data) => {
+              if (onAddData) await onAddData(data);
+            }}
+          />
+          <Button onClick={() => setAddOpen(true)}>Add Data</Button>
         </div>
       </div>
       <div className="overflow-hidden rounded-md border">

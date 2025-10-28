@@ -5,50 +5,59 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { BirthDateAgePicker } from '@/components/ui/birth-date-age-picker';
 import { PhoneInput } from '@/components/ui/phone-input';
-import { UserSchema, User } from './columns';
-// If you move UserSchema/User to a shared file, update this import accordingly.
+import { UserSchema } from './columns';
 import * as React from 'react';
 import { format } from 'date-fns';
 
-interface EditUserFormProps {
-  user: User;
+
+export interface UserFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdateUser?: (updatedUser: User) => void;
+  initialData?: Partial<Record<string, any>>;
+  onSubmit: (data: any) => Promise<void> | void;
+  isEdit?: boolean;
 }
 
-export function EditUserForm({ user, open, onOpenChange, onUpdateUser }: EditUserFormProps) {
+export function UserForm({ open, onOpenChange, initialData, onSubmit, isEdit }: UserFormProps) {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
-  const [birthDate, setBirthDate] = React.useState<Date | undefined>();
-  const [age, setAge] = React.useState<number | undefined>();
-  const [phone, setPhone] = React.useState<string>('');
+  const [birthDate, setBirthDate] = React.useState<Date | undefined>(
+    initialData?.birthDate ? new Date(initialData.birthDate) : undefined
+  );
+  const [age, setAge] = React.useState<number | undefined>(initialData?.age);
+  const [phone, setPhone] = React.useState<string>(initialData?.phone || '');
 
   React.useEffect(() => {
-    if (open && user) {
-      setBirthDate(new Date(user.birthDate));
-      setAge(user.age);
-      setPhone(user.phone);
+    if (open) {
       setErrors({});
+      setBirthDate(initialData?.birthDate ? new Date(initialData.birthDate) : undefined);
+      setAge(initialData?.age);
+      setPhone(initialData?.phone || '');
     }
-  }, [open, user]);
+  }, [open, initialData]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
+          <DialogTitle>{isEdit ? 'Edit User' : 'Add New User'}</DialogTitle>
         </DialogHeader>
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target as HTMLFormElement);
             const birthDateStr = birthDate ? format(birthDate, 'yyyy-MM-dd') : '';
 
+            const rawId = Number(formData.get('id'));
+            const finalId = !rawId || Number.isNaN(rawId)
+              ? (initialData?.id ?? Date.now())
+              : rawId;
+
             const rawData = {
-              id: user.id,
+              id: finalId,
               firstName: formData.get('firstName') as string,
               lastName: formData.get('lastName') as string,
               age: age || 0,
@@ -59,7 +68,11 @@ export function EditUserForm({ user, open, onOpenChange, onUpdateUser }: EditUse
 
             try {
               const validatedData = UserSchema.parse(rawData);
-              onUpdateUser?.(validatedData);
+              await Promise.resolve(onSubmit(validatedData));
+              (e.target as HTMLFormElement).reset();
+              setBirthDate(undefined);
+              setAge(undefined);
+              setPhone('');
               setErrors({});
               onOpenChange(false);
             } catch (error: any) {
@@ -76,22 +89,32 @@ export function EditUserForm({ user, open, onOpenChange, onUpdateUser }: EditUse
         >
           <div>
             <label className="mb-1 block text-sm font-medium">ID</label>
-            <Input value={user.id} disabled className="bg-gray-50" />
+            <Input
+              name="id"
+              type="number"
+              placeholder="Enter ID"
+              error={errors.id}
+              defaultValue={initialData?.id}
+              disabled={isEdit}
+              className={isEdit ? 'bg-gray-50' : ''}
+            />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">First Name</label>
             <Input
               name="firstName"
-              defaultValue={user.firstName}
+              placeholder="Enter First Name"
               error={errors.firstName}
+              defaultValue={initialData?.firstName}
             />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Last Name</label>
             <Input
               name="lastName"
-              defaultValue={user.lastName}
+              placeholder="Enter Last Name"
               error={errors.lastName}
+              defaultValue={initialData?.lastName}
             />
           </div>
           <div>
@@ -99,8 +122,9 @@ export function EditUserForm({ user, open, onOpenChange, onUpdateUser }: EditUse
             <Input
               name="email"
               type="email"
-              defaultValue={user.email}
+              placeholder="Enter Email"
               error={errors.email}
+              defaultValue={initialData?.email}
             />
           </div>
           <div>
@@ -121,7 +145,7 @@ export function EditUserForm({ user, open, onOpenChange, onUpdateUser }: EditUse
             className="space-y-4"
           />
           <Button type="submit" className="w-full">
-            Update User
+            {isEdit ? 'Update User' : 'Add User'}
           </Button>
         </form>
       </DialogContent>

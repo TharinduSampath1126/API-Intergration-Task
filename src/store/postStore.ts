@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User, UserSchema } from '@/components/payments/columns';
+import { User, UserSchema } from '@/components/form/columns';
 
 interface UserStore {
   newPosts: User[];

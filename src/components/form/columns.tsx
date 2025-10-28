@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
-import { EditUserForm } from './edit-user-form';
+import { UserForm } from './add-post-form';
 import { usePostStore } from '@/store/postStore';
 import { UserDetailsDialog } from './user-details-dialog';
 
@@ -81,10 +81,6 @@ function ActionsCell({ user }: { user: User }) {
     }
   };
 
-  const handleUpdateUser = (updatedUser: User) => {
-    updatePost(updatedUser);
-  };
-
   return (
     <>
       <div className="flex items-center gap-2">
@@ -120,11 +116,14 @@ function ActionsCell({ user }: { user: User }) {
         onOpenChange={setShowDialog}
       />
 
-      <EditUserForm
-        user={user}
+      <UserForm
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
-        onUpdateUser={handleUpdateUser}
+        initialData={user}
+        isEdit
+        onSubmit={async (updatedUser) => {
+          updatePost(updatedUser);
+        }}
       />
     </>
   );
