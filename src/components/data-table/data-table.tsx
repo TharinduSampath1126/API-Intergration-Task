@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import TableColumnsDropdown from './table-columns-dropdown';
 import RowsPerPageSelect from '@/components/customUi/rows-per-page-select';
-import PaginationControls from '@/components/customUi/pagination';
+
 import { UserForm } from '@/components/form/add-post-form';
 
 import {
@@ -27,6 +27,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { DataTablePagination } from '../customUi/pagination';
+
+
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -145,7 +148,7 @@ export function DataTable<TData, TValue>({
           />
         </div>
         <div className="flex justify-end">
-          <PaginationControls table={table} />
+<DataTablePagination table={table} />
         </div>
       </div>
     </div>

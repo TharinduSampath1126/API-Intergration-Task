@@ -4,7 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { User } from './columns';
+import { User } from '../data-table/columns';
 
 interface UserDetailsDialogProps {
   user: User;
@@ -15,9 +15,9 @@ interface UserDetailsDialogProps {
 export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>User Details</DialogTitle>
+          <DialogTitle className='font-bold text-2xl '>User Details</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 ">
           <div>

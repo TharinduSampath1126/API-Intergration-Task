@@ -63,68 +63,97 @@ export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange }: Prop
 			}}
 			className="space-y-4"
 		>
-			<div>
-				<label className="mb-1 block text-sm font-medium">ID</label>
-				<Input
-					name="id"
-					type="number"
-					placeholder="Enter ID"
-					error={errors.id}
-					defaultValue={initialData?.id}
-					disabled={isEdit}
-					className={isEdit ? 'bg-gray-50' : ''}
-				/>
+			<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+				<div className="sm:col-span-2">
+					<label className="mb-1 block text-sm font-medium">ID</label>
+					<Input
+						name="id"
+						type="number"
+						placeholder="Enter ID"
+						error={errors.id}
+						defaultValue={initialData?.id}
+						disabled={isEdit}
+						className={isEdit ? 'bg-gray-50' : ''}
+					/>
+					{errors.id ? <p className="mt-1 text-sm text-red-600">{errors.id}</p> : null}
+				</div>
+
+				<div>
+					<label className="mb-1 block text-sm font-medium">First Name</label>
+					<Input
+						name="firstName"
+						placeholder="Enter First Name"
+						error={errors.firstName}
+						defaultValue={initialData?.firstName}
+					/>
+					{errors.firstName ? <p className="mt-1 text-sm text-red-600">{errors.firstName}</p> : null}
+				</div>
+
+				<div>
+					<label className="mb-1 block text-sm font-medium">Last Name</label>
+					<Input
+						name="lastName"
+						placeholder="Enter Last Name"
+						error={errors.lastName}
+						defaultValue={initialData?.lastName}
+					/>
+					{errors.lastName ? <p className="mt-1 text-sm text-red-600">{errors.lastName}</p> : null}
+				</div>
+
+				<div className="sm:col-span-2">
+					<label className="mb-1 block text-sm font-medium">Email</label>
+					<Input
+						name="email"
+						type="email"
+						placeholder="Enter Email"
+						error={errors.email}
+						defaultValue={initialData?.email}
+					/>
+					{errors.email ? <p className="mt-1 text-sm text-red-600">{errors.email}</p> : null}
+				</div>
+
+				<div className="sm:col-span-2">
+					<label className="mb-1 block text-sm font-medium">Phone</label>
+					<PhoneInput
+						value={phone}
+						onChange={setPhone}
+						placeholder="Enter phone number"
+						error={errors.phone}
+					/>
+					{errors.phone ? <p className="mt-1 text-sm text-red-600">{errors.phone}</p> : null}
+				</div>
+
+				<div className="sm:col-span-2">
+					<BirthDateAgePicker
+						birthDate={birthDate}
+						onBirthDateChange={(d) => {
+							setBirthDate(d);
+						}}
+						onAgeChange={(a) => setAge(a)}
+						birthDateError={errors.birthDate}
+						ageError={errors.age}
+						className="space-y-4"
+					/>
+					{errors.birthDate ? <p className="mt-1 text-sm text-red-600">{errors.birthDate}</p> : null}
+					{errors.age ? <p className="mt-1 text-sm text-red-600">{errors.age}</p> : null}
+				</div>
 			</div>
-			<div>
-				<label className="mb-1 block text-sm font-medium">First Name</label>
-				<Input
-					name="firstName"
-					placeholder="Enter First Name"
-					error={errors.firstName}
-					defaultValue={initialData?.firstName}
-				/>
+
+			<div className="flex items-center gap-2">
+				<Button type="submit" className="flex-1">
+					{isEdit ? 'Update User' : 'Add User'}
+				</Button>
+				<Button
+					type="button"
+					variant="ghost"
+					className="w-32"
+					onClick={() => {
+						onOpenChange?.(false);
+					}}
+				>
+					Cancel
+				</Button>
 			</div>
-			<div>
-				<label className="mb-1 block text-sm font-medium">Last Name</label>
-				<Input
-					name="lastName"
-					placeholder="Enter Last Name"
-					error={errors.lastName}
-					defaultValue={initialData?.lastName}
-				/>
-			</div>
-			<div>
-				<label className="mb-1 block text-sm font-medium">Email</label>
-				<Input
-					name="email"
-					type="email"
-					placeholder="Enter Email"
-					error={errors.email}
-					defaultValue={initialData?.email}
-				/>
-			</div>
-			<div>
-				<label className="mb-1 block text-sm font-medium">Phone</label>
-				<PhoneInput
-					value={phone}
-					onChange={setPhone}
-					placeholder="Enter phone number"
-					error={errors.phone}
-				/>
-			</div>
-			<BirthDateAgePicker
-				birthDate={birthDate}
-				onBirthDateChange={(d) => {
-					setBirthDate(d);
-				}}
-				onAgeChange={(a) => setAge(a)}
-				birthDateError={errors.birthDate}
-				ageError={errors.age}
-				className="space-y-4"
-			/>
-			<Button type="submit" className="w-full">
-				{isEdit ? 'Update User' : 'Add User'}
-			</Button>
 		</form>
 	);
 }

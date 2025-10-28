@@ -92,7 +92,7 @@ export function PhoneInput({ value = '', onChange, placeholder = 'Enter phone nu
         <SelectTrigger className="w-24">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent >
           {countryCodes.map((country) => (
             <SelectItem key={country.code} value={country.code}>
               <span className="flex items-center gap-2">
