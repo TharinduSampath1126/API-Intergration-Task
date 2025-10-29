@@ -6,21 +6,32 @@ import { Button } from '@/components/ui/button';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { BirthDateAgePicker } from '@/components/ui/birth-date-age-picker';
 import { UserSchema, User } from '@/components/data-table/columns';
+import { useCreateUser, useUpdateUser } from '@/hooks/useUserQueries';
 
 type Props = {
 	initialData?: User;
 	isEdit?: boolean;
 	onSubmit: (data: User) => Promise<void> | void;
 	onOpenChange?: (open: boolean) => void;
+	useReactQuery?: boolean; // Optional: enable React Query mutations
 };
 
-export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange }: Props) {
+export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange, useReactQuery = false }: Props) {
 	const [birthDate, setBirthDate] = React.useState<Date | undefined>(
 		initialData ? (initialData.birthDate ? new Date(initialData.birthDate) : undefined) : undefined
 	);
 	const [age, setAge] = React.useState<number | undefined>(initialData?.age);
 	const [phone, setPhone] = React.useState<string>(initialData?.phone ?? '');
 	const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+	// helper to clear a specific field error when the field changes
+	const clearFieldError = (field: string) => {
+		setErrors((prev) => {
+			const next = { ...prev };
+			delete (next as any)[field];
+			return next;
+		});
+	};
 
 	return (
 		<form
@@ -71,11 +82,12 @@ export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange }: Prop
 						type="number"
 						placeholder="Enter ID"
 						error={errors.id}
+						onChange={() => clearFieldError('id')}
 						defaultValue={initialData?.id}
 						disabled={isEdit}
 						className={isEdit ? 'bg-gray-50' : ''}
 					/>
-					{errors.id ? <p className="mt-1 text-sm text-red-600">{errors.id}</p> : null}
+					
 				</div>
 
 				<div>
@@ -84,9 +96,10 @@ export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange }: Prop
 						name="firstName"
 						placeholder="Enter First Name"
 						error={errors.firstName}
+						onChange={() => clearFieldError('firstName')}
 						defaultValue={initialData?.firstName}
 					/>
-					{errors.firstName ? <p className="mt-1 text-sm text-red-600">{errors.firstName}</p> : null}
+					
 				</div>
 
 				<div>
@@ -95,9 +108,10 @@ export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange }: Prop
 						name="lastName"
 						placeholder="Enter Last Name"
 						error={errors.lastName}
+						onChange={() => clearFieldError('lastName')}
 						defaultValue={initialData?.lastName}
 					/>
-					{errors.lastName ? <p className="mt-1 text-sm text-red-600">{errors.lastName}</p> : null}
+					
 				</div>
 
 				<div className="sm:col-span-2">
@@ -107,20 +121,24 @@ export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange }: Prop
 						type="email"
 						placeholder="Enter Email"
 						error={errors.email}
+						onChange={() => clearFieldError('email')}
 						defaultValue={initialData?.email}
 					/>
-					{errors.email ? <p className="mt-1 text-sm text-red-600">{errors.email}</p> : null}
+					
 				</div>
 
 				<div className="sm:col-span-2">
 					<label className="mb-1 block text-sm font-medium">Phone</label>
 					<PhoneInput
 						value={phone}
-						onChange={setPhone}
+						onChange={(v) => {
+							setPhone(v);
+							clearFieldError('phone');
+						}}
 						placeholder="Enter phone number"
 						error={errors.phone}
 					/>
-					{errors.phone ? <p className="mt-1 text-sm text-red-600">{errors.phone}</p> : null}
+					
 				</div>
 
 				<div className="sm:col-span-2">
@@ -128,14 +146,19 @@ export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange }: Prop
 						birthDate={birthDate}
 						onBirthDateChange={(d) => {
 							setBirthDate(d);
+							clearFieldError('birthDate');
+							// also clear age error when birth date changes
+							clearFieldError('age');
 						}}
-						onAgeChange={(a) => setAge(a)}
+						onAgeChange={(a) => {
+							setAge(a);
+							clearFieldError('age');
+						}}
 						birthDateError={errors.birthDate}
 						ageError={errors.age}
 						className="space-y-4"
 					/>
-					{errors.birthDate ? <p className="mt-1 text-sm text-red-600">{errors.birthDate}</p> : null}
-					{errors.age ? <p className="mt-1 text-sm text-red-600">{errors.age}</p> : null}
+					
 				</div>
 			</div>
 
