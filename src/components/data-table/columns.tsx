@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserForm } from '@/components/form/add-post-form';
 import { usePostStore } from '@/store/postStore';
 import { UserDetailsDialog } from '@/components/form/user-details-dialog';
+import DeleteAlert from '@/components/customUi/delete-alert';
 
 export const UserSchema = z.object({
   id: z.number().min(1, 'ID must be greater than 0'),
@@ -73,11 +74,20 @@ export type User = z.infer<typeof UserSchema>;
 function ActionsCell({ user }: { user: User }) {
   const [showDialog, setShowDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { updatePost, removePost } = usePostStore();
 
-  const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this user?')) {
-      removePost(user.id);
+  const handleDeleteClick = () => setDeleteOpen(true);
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      // support sync or async removePost implementations
+      await Promise.resolve(removePost(user.id));
+  setDeleteOpen(false);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -101,9 +111,10 @@ function ActionsCell({ user }: { user: User }) {
           <Edit className="h-4 w-4" />
         </Button>
         <Button
+          id="trash"
           variant="ghost"
           size="sm"
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
           className="h-8 w-8 p-0 text-red-600 hover:text-red-800"
         >
           <Trash2 className="h-4 w-4" />
@@ -124,6 +135,14 @@ function ActionsCell({ user }: { user: User }) {
         onSubmit={async (updatedUser) => {
           updatePost(updatedUser);
         }}
+      />
+
+      <DeleteAlert
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        itemName={`${user.firstName} ${user.lastName}`}
+        onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
       />
     </>
   );

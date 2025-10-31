@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { User } from '@/components/data-table/columns';
+import { userApi } from '@/apis/user';
 
 // Query keys
 export const userKeys = {
@@ -11,48 +11,11 @@ export const userKeys = {
   detail: (id: number) => [...userKeys.details(), id] as const,
 };
 
-// API functions
-async function fetchUsers(): Promise<User[]> {
-  const res = await axios.get('https://dummyjson.com/users');
-  const users: User[] = res.data.users.map((user: any) => ({
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    age: user.age,
-    email: user.email,
-    phone: user.phone,
-    birthDate: user.birthDate,
-  }));
-  return users;
-}
-
-async function createUser(userData: Omit<User, 'id'>): Promise<User> {
-  // For demo purposes, simulate API call
-  const res = await axios.post('https://dummyjson.com/users/add', userData);
-  return {
-    id: res.data.id || Date.now(), // Fallback to timestamp if no ID returned
-    ...userData,
-  };
-}
-
-async function updateUser(userData: User): Promise<User> {
-  // For demo purposes, simulate API call
-  const res = await axios.put(`https://dummyjson.com/users/${userData.id}`, userData);
-  return {
-    ...userData,
-    ...res.data,
-  };
-}
-
-async function deleteUser(id: number): Promise<void> {
-  await axios.delete(`https://dummyjson.com/users/${id}`);
-}
-
 // React Query hooks
 export function useUsers() {
   return useQuery({
     queryKey: userKeys.lists(),
-    queryFn: fetchUsers,
+    queryFn: userApi.fetchUsers,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
@@ -61,12 +24,12 @@ export function useCreateUser() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: createUser,
+    mutationFn: userApi.createUser,
     onSuccess: (newUser) => {
-      // Optimistically update the cache
+      // Optimistically update the cache - add to top of list
       queryClient.setQueryData<User[]>(userKeys.lists(), (old) => {
         if (!old) return [newUser];
-        return [...old, newUser];
+        return [newUser, ...old];
       });
       
       // Invalidate and refetch
@@ -79,7 +42,7 @@ export function useUpdateUser() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: updateUser,
+    mutationFn: userApi.updateUser,
     onSuccess: (updatedUser) => {
       // Optimistically update the cache
       queryClient.setQueryData<User[]>(userKeys.lists(), (old) => {
@@ -99,7 +62,7 @@ export function useDeleteUser() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: deleteUser,
+    mutationFn: userApi.deleteUser,
     onSuccess: (_, deletedId) => {
       // Optimistically update the cache
       queryClient.setQueryData<User[]>(userKeys.lists(), (old) => {
@@ -117,18 +80,7 @@ export function useDeleteUser() {
 export function useUser(id: number) {
   return useQuery({
     queryKey: userKeys.detail(id),
-    queryFn: async () => {
-      const res = await axios.get(`https://dummyjson.com/users/${id}`);
-      return {
-        id: res.data.id,
-        firstName: res.data.firstName,
-        lastName: res.data.lastName,
-        age: res.data.age,
-        email: res.data.email,
-        phone: res.data.phone,
-        birthDate: res.data.birthDate,
-      } as User;
-    },
+    queryFn: () => userApi.fetchUserById(id),
     enabled: !!id,
   });
 }

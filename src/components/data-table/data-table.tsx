@@ -1,23 +1,12 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import TableColumnsDropdown from './table-columns-dropdown';
 import RowsPerPageSelect from '@/components/customUi/rows-per-page-select';
 
 import { UserForm } from '@/components/form/add-post-form';
 
-import {
-  ColumnDef,
-  SortingState,
-  ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  VisibilityState,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { ColumnDef, flexRender } from '@tanstack/react-table';
+import { useAppTable } from '@/hooks/useAppTable';
 
 import {
   Table,
@@ -27,80 +16,84 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DataTablePagination } from '../customUi/pagination';
 import SuccessAlert from '@/components/customUi/success-alert';
-
-
+import { usePostStore } from '@/store/postStore';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onAddData?: (newData: any) => void;
+  onTableChange?: (table: any) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  onAddData,
+  onTableChange,
 }: DataTableProps<TData, TValue>) {
-  const [addOpen, setAddOpen] = React.useState(false);
-  const [successOpen, setSuccessOpen] = React.useState(false);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const lastDeleted = usePostStore((s) => s.lastDeleted);
+  const clearLastDeleted = usePostStore((s) => s.clearLastDeleted);
 
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
+  const { table, columnFilters, setColumnFilters, columnVisibility, setColumnVisibility } = useAppTable(data, columns);
 
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-    },
-  });
+  // expose a small reactive API to parent so external pagination controls
+  // receive updates only when relevant table state changes. We memoize
+  // the API and only call the parent's setter when the memoized object
+  // changes to avoid infinite update loops.
+  const api = React.useMemo(() => {
+    return {
+      table,
+      pageIndex: table.getState().pagination.pageIndex,
+      pageSize: table.getState().pagination.pageSize,
+      pageCount: table.getPageCount(),
+      canPrevious: table.getCanPreviousPage(),
+      canNext: table.getCanNextPage(),
+      setPageSize: (s: number) => table.setPageSize(s),
+      setPageIndex: (i: number) => table.setPageIndex(i),
+      previousPage: () => table.previousPage(),
+      nextPage: () => table.nextPage(),
+  // expose column filters and visibility so parents re-render when they change
+  columnFilters,
+  setColumnFilters,
+  columnVisibility,
+  setColumnVisibility,
+    };
+    // include the primitive values/readers used above as dependencies so
+    // the memo updates only when these change.
+  }, [
+    table,
+    table.getState().pagination.pageIndex,
+    table.getState().pagination.pageSize,
+    table.getPageCount(),
+    table.getCanPreviousPage(),
+    table.getCanNextPage(),
+    // re-run memo when columnFilters OR columnVisibility change so external
+    // controls (filter inputs and column visibility dropdown) update
+    columnFilters,
+    columnVisibility,
+  ]);
+
+  React.useEffect(() => {
+    if (typeof onTableChange === 'function') {
+      onTableChange(api);
+    }
+  }, [onTableChange, api]);
+
+  
 
   return (
     <div>
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter names..."
-          value={
-            (table.getColumn('firstName')?.getFilterValue() as string) ?? ''
-          }
-          onChange={(event) =>
-            table.getColumn('firstName')?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
+      <>
+        <SuccessAlert
+          open={Boolean(lastDeleted)}
+          onOpenChange={(v) => {
+            if (!v) clearLastDeleted?.();
+          }}
+          title="Deleted"
+          message={lastDeleted ? `${lastDeleted.firstName} ${lastDeleted.lastName} was deleted successfully.` : undefined}
         />
 
-        <TableColumnsDropdown table={table} />
-          {onAddData && (
-          <div className="ml-2">
-            <UserForm
-              open={addOpen}
-              onOpenChange={setAddOpen}
-              onSubmit={async (data) => {
-                if (onAddData) await onAddData(data);
-                // close add dialog and show success modal
-                setAddOpen(false);
-                setSuccessOpen(true);
-              }}
-            />
-            <Button onClick={() => setAddOpen(true)}>Add Data</Button>
-          </div>
-        )}
-
-        <SuccessAlert open={successOpen} onOpenChange={setSuccessOpen} />
-      </div>
-      <div className="overflow-hidden rounded-md border">
+        <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -139,27 +132,18 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No results.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-      </div>
-      <div className="flex items-center justify-between py-4">
-        <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
-          <RowsPerPageSelect
-            value={`${table.getState().pagination.pageSize}`}
-            onValueChange={(value) => table.setPageSize(Number(value))}
-            className="h-8 w-[70px]"
-          />
         </div>
-        <div className="flex justify-end">
-<DataTablePagination table={table} />
-        </div>
-      </div>
+      </>
     </div>
   );
 }
