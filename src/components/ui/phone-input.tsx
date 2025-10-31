@@ -114,7 +114,7 @@ export function PhoneInput({ value = '', onChange, placeholder = 'Enter phone nu
             onValidation?.(res.valid, 'message' in res ? res.message : undefined);
           }}
           placeholder={placeholder}
-          error={propsError ?? error}
+          error={(propsError ?? error) ?? undefined}
         />
       </div>
       <input type="hidden" name={name} value={`${countryCode} ${phoneNumber}`.trim()} />

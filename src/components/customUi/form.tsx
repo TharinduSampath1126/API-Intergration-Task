@@ -6,17 +6,15 @@ import { Button } from '@/components/ui/button';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { BirthDateAgePicker } from '@/components/ui/birth-date-age-picker';
 import { UserSchema, User } from '@/components/data-table/columns';
-import { useCreateUser, useUpdateUser } from '@/hooks/useUserQueries';
 
 type Props = {
 	initialData?: User;
 	isEdit?: boolean;
 	onSubmit: (data: User) => Promise<void> | void;
 	onOpenChange?: (open: boolean) => void;
-	useReactQuery?: boolean; // Optional: enable React Query mutations
 };
 
-export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange, useReactQuery = false }: Props) {
+export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange }: Props) {
 	const [birthDate, setBirthDate] = React.useState<Date | undefined>(
 		initialData ? (initialData.birthDate ? new Date(initialData.birthDate) : undefined) : undefined
 	);

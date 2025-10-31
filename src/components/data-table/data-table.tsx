@@ -28,6 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { DataTablePagination } from '../customUi/pagination';
+import SuccessAlert from '@/components/customUi/success-alert';
 
 
 
@@ -43,6 +44,7 @@ export function DataTable<TData, TValue>({
   onAddData,
 }: DataTableProps<TData, TValue>) {
   const [addOpen, setAddOpen] = React.useState(false);
+  const [successOpen, setSuccessOpen] = React.useState(false);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -80,16 +82,23 @@ export function DataTable<TData, TValue>({
         />
 
         <TableColumnsDropdown table={table} />
-        <div className="ml-2">
-          <UserForm
-            open={addOpen}
-            onOpenChange={setAddOpen}
-            onSubmit={async (data) => {
-              if (onAddData) await onAddData(data);
-            }}
-          />
-          <Button onClick={() => setAddOpen(true)}>Add Data</Button>
-        </div>
+          {onAddData && (
+          <div className="ml-2">
+            <UserForm
+              open={addOpen}
+              onOpenChange={setAddOpen}
+              onSubmit={async (data) => {
+                if (onAddData) await onAddData(data);
+                // close add dialog and show success modal
+                setAddOpen(false);
+                setSuccessOpen(true);
+              }}
+            />
+            <Button onClick={() => setAddOpen(true)}>Add Data</Button>
+          </div>
+        )}
+
+        <SuccessAlert open={successOpen} onOpenChange={setSuccessOpen} />
       </div>
       <div className="overflow-hidden rounded-md border">
         <Table>
