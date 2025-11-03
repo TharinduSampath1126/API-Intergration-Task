@@ -31,6 +31,13 @@ function navbar() {
         >
             Add Users
         </NavigationMenuItem>
+        <NavigationMenuItem
+          onClick={() => navigate('/admin')}
+          className={`cursor-pointer rounded-lg p-2 text-white ${location.pathname.startsWith('/admin') ? 'bg-gray-900' : 'bg-gray-500'}`}
+          aria-current={location.pathname.startsWith('/admin') ? 'page' : undefined}
+        >
+            Admin
+        </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
   );

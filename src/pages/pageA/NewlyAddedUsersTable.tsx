@@ -1,5 +1,4 @@
-import { columns, User } from '@/components/data-table/columns';
-import { DataTable } from '@/components/data-table/data-table';
+import { User } from '@/components/data-table/columns';
 import RowsPerPageSelect from '@/components/customUi/rows-per-page-select';
 import { usePostStore } from '@/store/postStore';
 import React from 'react';
@@ -9,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { UserForm } from '@/components/form/add-post-form';
 import TableColumnsDropdown from '@/components/data-table/table-columns-dropdown';
 import SuccessAlert from '@/components/customUi/success-alert';
+import UsersTable from './tables/users-table';
 
 type Props = {
   data?: User[];
@@ -75,8 +75,7 @@ export default function NewlyAddedUsersTable({ data, onAddData }: Props) {
 
       <SuccessAlert open={successOpen} onOpenChange={setSuccessOpen} />
 
-      <DataTable
-        columns={columns}
+      <UsersTable
         data={data ?? newPosts ?? []}
         onTableChange={setTable}
       />

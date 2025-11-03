@@ -2,11 +2,11 @@ import { DataTablePagination } from '@/components/customUi/pagination';
 import RowsPerPageSelect from '@/components/customUi/rows-per-page-select';
 import React from 'react';
 import { columns, User } from '@/components/data-table/columns';
-import { DataTable } from '@/components/data-table/data-table';
 import { useUsers } from '@/hooks/useUserQueries';
 import { Input } from '@/components/ui/input';
 import TableColumnsDropdown from '@/components/data-table/table-columns-dropdown';
 import SuccessAlert from '@/components/customUi/success-alert';
+import UsersTableComponent from './tables/users-table';
 
 type Props = {
   data?: User[];
@@ -93,7 +93,10 @@ export default function UsersTable({ data }: Props) {
 
       <SuccessAlert open={successOpen} onOpenChange={setSuccessOpen} />
 
-      <DataTable columns={columns} data={actualData} onTableChange={setTable} />
+      <UsersTableComponent 
+        data={actualData} 
+        onTableChange={setTable}
+      />
 
       <div className="flex items-center justify-between py-4">
         <div className="flex items-center space-x-2">
