@@ -13,25 +13,25 @@ export default function UsersTable({ data, onTableChange }: Props) {
       data={data}
       onTableChange={onTableChange}
       // Column customization props
-      
-      columnOrder={['id', 'firstName', 'lastName', 'email', 'phone', 'birthDate','age', 'actions']}
+
+      columnOrder={['1', '2', '3', '4', '5', '6', '7']}
       columnWidths={{
-        'id': 60,
-        'firstName': 120,
-        'lastName': 120,
-        'email': 200,
-        'phone': 140,
-        'birthDate': 120,
-        'actions': 120
+        '1': 60,
+        '2': 120,
+        '3': 120,
+        '4': 200,
+        '5': 140,
+        '6': 120,
+        '7': 120
       }}
       columnHeaders={{
-        'firstName': 'firstName',
-        'lastName': 'lastName',
-        'email': 'email',
-        'phone': 'phone',
-        'birthDate': 'birthDate',
-        'age': 'age',
-        'actions': 'actions'
+        '1': 'firstName',
+        '2': 'lastName',
+        '3': 'email',
+        '4': 'phone',
+        '5': 'birthDate',
+        '6': 'age',
+        '7': 'actions'
       }}
       // Visual customization props
       striped={true}

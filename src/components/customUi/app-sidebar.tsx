@@ -22,12 +22,12 @@ const items = [
     icon: BarChart3,
   },
   {
-    title: "Users Data", 
+    title: "Products Data", 
     url: "/",
     icon: Users,
   },
   {
-    title: "New Users",
+    title: "Users Data",
     url: "/newly-added",
     icon: UserPlus,
   },

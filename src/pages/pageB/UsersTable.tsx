@@ -2,11 +2,13 @@ import { DataTablePagination } from '@/components/customUi/pagination';
 import RowsPerPageSelect from '@/components/customUi/rows-per-page-select';
 import React from 'react';
 import { columns, User } from '@/components/data-table/columns';
+import { productColumns } from '@/pages/pageA/tables/table-columns/product-columns';
 import { useUsers } from '@/hooks/useUserQueries';
+import { useProducts } from '@/hooks/useProductQueries';
 import { Input } from '@/components/ui/input';
 import TableColumnsDropdown from '@/components/data-table/table-columns-dropdown';
 import SuccessAlert from '@/components/customUi/success-alert';
-import UsersTableComponent from './tables/users-table';
+import { DataTable } from '@/components/data-table/data-table';
 
 type Props = {
   data?: User[];
@@ -14,6 +16,7 @@ type Props = {
 
 export default function UsersTable({ data }: Props) {
   const { data: apiData } = useUsers();
+  const { data: productsData } = useProducts();
   const [table, setTable] = React.useState<any | null>(null);
   const [successOpen, setSuccessOpen] = React.useState(false);
 
@@ -21,8 +24,8 @@ export default function UsersTable({ data }: Props) {
   const [currentPage, setCurrentPage] = React.useState(0);
   const [pageSize] = React.useState(10);
 
-  // Get the actual data array for pagination
-  const actualData = data ?? apiData ?? [];
+  // Get the actual data array for pagination - prioritize products data
+  const actualData = productsData ?? data ?? apiData ?? [];
 
   // helper to support both the raw TanStack table instance and the
   // wrapper API object we pass from DataTable (which contains a `table` field).
@@ -40,14 +43,15 @@ export default function UsersTable({ data }: Props) {
 
   // Build a lightweight columns array for the dropdown and a toggle handler
   const dropdownColumns = React.useMemo(() => {
-    return columns.map((col: any) => {
+    const currentColumns = productsData ? productColumns : columns;
+    return currentColumns.map((col: any) => {
       const id = col.id ?? col.accessorKey;
       const label = typeof col.header === 'string' ? col.header : id;
       const isVisible = getColumn(id)?.getIsVisible?.() ?? true;
       return { id, label, isVisible };
     });
     // include `table` because visibility is read from it when available
-  }, [columns, table, getColumn]);
+  }, [columns, productColumns, table, getColumn, productsData]);
 
   const handleToggleColumn = React.useCallback(
     (id: string, visible: boolean) => {
@@ -73,14 +77,14 @@ export default function UsersTable({ data }: Props) {
 
   return (
     <div className="">
-      <h2 className="mb-4 text-2xl font-bold">Users Data</h2>
+      <h2 className="mb-4 text-2xl font-bold">Products Data</h2>
 
       <div className="mb-5 flex">
         <Input
-          placeholder="Filter names..."
-          value={(getColumn('firstName')?.getFilterValue() as string) ?? ''}
+          placeholder={productsData ? "Filter products..." : "Filter names..."}
+          value={(getColumn(productsData ? 'title' : 'firstName')?.getFilterValue() as string) ?? ''}
           onChange={(event) =>
-            getColumn('firstName')?.setFilterValue?.(event.target.value)
+            getColumn(productsData ? 'title' : 'firstName')?.setFilterValue?.(event.target.value)
           }
           className="max-w-sm"
         />
@@ -93,9 +97,25 @@ export default function UsersTable({ data }: Props) {
 
       <SuccessAlert open={successOpen} onOpenChange={setSuccessOpen} />
 
-      <UsersTableComponent 
-        data={actualData} 
+      <DataTable
+        columns={productsData ? productColumns : columns as any}
+        data={actualData as any}
         onTableChange={setTable}
+        columnHeaders={{
+          name: "Name",
+          username: "Username",
+          phone: "Phone",
+          email: "Email",
+          id: "ID",
+          website: "Website",
+          title: "Product Title",
+          brand: "Brand",
+          category: "Category",
+          price: "Price",
+          rating: "Rating",
+          stock: "Stock"
+        }}
+        hiddenColumns={["id"]}
       />
 
       <div className="flex items-center justify-between py-4">
@@ -108,7 +128,7 @@ export default function UsersTable({ data }: Props) {
           />
         </div>
         <DataTablePagination
-          data={actualData}
+          data={actualData as any}
           pageSize={pageSize}
           pageIndex={currentPage}
           onPageChange={setCurrentPage}

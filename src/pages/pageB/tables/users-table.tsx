@@ -14,18 +14,22 @@ export default function UsersTable({ data, onTableChange }: Props) {
       onTableChange={onTableChange}
       // Different customization for pageB - compact view
       hiddenColumns={['birthDate', 'phone']} // Hide birthDate and phone
-      columnOrder={['firstName', 'lastName', 'email', 'age', 'actions']}
+      columnOrder={['id', 'firstName', 'lastName', 'email', 'phone', 'birthDate', 'age', 'actions']}
       columnWidths={{
-        'firstName': 150,
-        'lastName': 150,
-        'email': 250,
-        'age': 80,
-        'actions': 100
+        'id': 60,
+        'firstName': 120,
+        'lastName': 120,
+        'email': 200,
+        'phone': 140,
+        'birthDate': 120,
+        'actions': 120
       }}
       columnHeaders={{
         'firstName': 'First Name',
         'lastName': 'Last Name',
-        'email': 'Email Address',
+        'email': 'Email',
+        'phone': 'Phone',
+        'birthDate': 'Birth Date',
         'age': 'Age',
         'actions': 'Actions'
       }}
