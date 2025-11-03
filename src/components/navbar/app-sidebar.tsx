@@ -1,4 +1,4 @@
-import { BarChart3, Users, UserPlus, Settings, ChevronLeft, Menu } from "lucide-react"
+import { BarChart3,  UserPlus,  ChevronLeft, Menu, Package } from "lucide-react"
 import { useNavigate, useLocation } from 'react-router'
 
 import {
@@ -22,14 +22,14 @@ const items = [
     icon: BarChart3,
   },
   {
-    title: "Products Data", 
-    url: "/",
-    icon: Users,
-  },
-  {
     title: "Users Data",
     url: "/newly-added",
     icon: UserPlus,
+  },
+  {
+    title: "Products Data", 
+    url: "/",
+    icon: Package,
   },
   
 ]

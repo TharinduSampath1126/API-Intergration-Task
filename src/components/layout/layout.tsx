@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { SidebarProvider, SidebarInset, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/customUi/app-sidebar';
+import { SidebarProvider, SidebarInset, useSidebar } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/navbar/app-sidebar';
 
 type LayoutProps = {
   children: ReactNode;
@@ -13,7 +13,7 @@ const MainContent = ({ children }: { children: ReactNode }) => {
     <SidebarInset 
       className="transition-all duration-300 ease-in-out"
       style={{
-        marginLeft: !isMobile && open ? '11rem' : '1rem',
+        marginLeft: !isMobile && open ? '11rem' : '4rem',
         width: !isMobile && open ? 'calc(100vw - 11rem)' : '100vw',
       }}
     >

@@ -43,7 +43,7 @@ export default function NewlyAddedUsersTable({ data, onAddData }: Props) {
 
   return (
     <div>
-      <h2 className="mb-4 text-2xl font-bold">Newly Added Users</h2>
+      <h2 className="mb-4 text-2xl font-bold">Users</h2>
 
       <div className="flex justify-between">
         <Input
