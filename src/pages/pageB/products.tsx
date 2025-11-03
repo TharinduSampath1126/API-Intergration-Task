@@ -2,7 +2,7 @@ import { DataTablePagination } from '@/components/customUi/pagination';
 import RowsPerPageSelect from '@/components/customUi/rows-per-page-select';
 import React from 'react';
 import { columns, User } from '@/components/data-table/columns';
-import { productColumns } from '@/pages/pageA/tables/table-columns/product-columns';
+import { productColumns } from '@/pages/pageB/tables/table-columns/product-columns';
 import { useUsers } from '@/hooks/useUserQueries';
 import { useProducts } from '@/hooks/useProductQueries';
 import { Input } from '@/components/ui/input';

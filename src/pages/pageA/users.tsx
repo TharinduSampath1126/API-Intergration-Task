@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { UserForm } from '@/components/form/add-post-form';
 import TableColumnsDropdown from '@/components/data-table/table-columns-dropdown';
 import SuccessAlert from '@/components/customUi/success-alert';
-import UsersTable from './tables/users-table';
+import UsersTable from './tables/table-columns/users-table';
 
 type Props = {
   data?: User[];
