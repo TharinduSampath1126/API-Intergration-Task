@@ -46,6 +46,18 @@ export function BirthDateAgePicker({
     }
   };
 
+  // initialize age when a birthDate prop is provided (e.g., edit form)
+  React.useEffect(() => {
+    if (birthDate) {
+      const calculatedAge = calculateAge(birthDate);
+      setAge(calculatedAge);
+      onAgeChange?.(calculatedAge);
+    } else {
+      setAge(undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [birthDate]);
+
   return (
     <div className={className}>
       <div>

@@ -2,8 +2,8 @@
 import { Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NewlyAddedUsersTable from './pages/pageA/NewlyAddedUsersTable';
-import UsersTable from './pages/pageA/UsersTable';
-import Navbar from './components/navbar/navItem';
+import UsersTable from './pages/pageB/UsersTable';
+import Layout from './components/layout/layout';
 
 // Create QueryClient instance
 const queryClient = new QueryClient({
@@ -18,8 +18,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="">
-        <Navbar />
+      <Layout>
         <div className='mx-10 mt-10'>
           <h1 className="text-primary text-3xl">API Integration task</h1>
           <br />
@@ -30,7 +29,7 @@ function App() {
           </Routes>
 
         </div>
-      </div>
+      </Layout>
     </QueryClientProvider>
   );
 }

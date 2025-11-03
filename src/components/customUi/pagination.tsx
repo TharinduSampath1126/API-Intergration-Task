@@ -7,21 +7,40 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 interface DataTablePaginationProps<TData> {
   // accepts either the TanStack Table or the lightweight API object
   table?: Table<TData> | null | any
+  // OR provide pagination props directly (like CommonPagination)
+  pageIndex?: number
+  pageCount?: number
+  canPrevious?: boolean
+  canNext?: boolean
+  onPageChange?: (pageIndex: number) => void
+  onPreviousPage?: () => void
+  onNextPage?: () => void
+  showPageJump?: boolean
+  className?: string
+  // OR provide data directly for automatic pagination
+  data?: TData[]
+  pageSize?: number
 }
 
 export function DataTablePagination<TData>({
   table,
+  pageIndex: pageIndexProp,
+  pageCount: pageCountProp,
+  canPrevious: canPreviousProp,
+  canNext: canNextProp,
+  onPageChange,
+  onPreviousPage,
+  onNextPage,
+  showPageJump = false,
+  className,
+  data,
+  pageSize: pageSizeProp,
 }: DataTablePaginationProps<TData>) {
   // Support both the raw TanStack `table` instance and the wrapper API
   // we pass from DataTable. This keeps external controls reactive.
@@ -30,11 +49,32 @@ export function DataTablePagination<TData>({
   let canPrevious = false
   let canNext = false
   let setPageIndex: ((i: number) => void) | undefined
-  let setPageSize: ((s: number) => void) | undefined
   let previous: (() => void) | undefined
   let next: (() => void) | undefined
 
-  if (!table) {
+  // If data is provided directly, calculate pagination info
+  if (data && pageSizeProp && pageIndexProp !== undefined && onPageChange) {
+    const totalItems = data.length
+    const calculatedPageCount = Math.ceil(totalItems / pageSizeProp)
+    
+    pageIndex = pageIndexProp
+    pageCount = calculatedPageCount
+    canPrevious = pageIndexProp > 0
+    canNext = pageIndexProp < calculatedPageCount - 1
+    setPageIndex = onPageChange
+    previous = onPreviousPage || (() => onPageChange(pageIndexProp - 1))
+    next = onNextPage || (() => onPageChange(pageIndexProp + 1))
+  }
+  // If direct props are provided, use them instead of table
+  else if (pageIndexProp !== undefined && pageCountProp !== undefined && onPageChange) {
+    pageIndex = pageIndexProp
+    pageCount = pageCountProp
+    canPrevious = canPreviousProp ?? pageIndex > 0
+    canNext = canNextProp ?? pageIndex < pageCount - 1
+    setPageIndex = onPageChange
+    previous = onPreviousPage || (() => onPageChange(pageIndex - 1))
+    next = onNextPage || (() => onPageChange(pageIndex + 1))
+  } else if (!table) {
     // keep defaults
   } else if (typeof table.getState === 'function') {
     pageIndex = table.getState().pagination.pageIndex
@@ -42,7 +82,6 @@ export function DataTablePagination<TData>({
     canPrevious = table.getCanPreviousPage()
     canNext = table.getCanNextPage()
     setPageIndex = (i: number) => table.setPageIndex(i)
-    setPageSize = (s: number) => table.setPageSize(s)
     previous = () => table.previousPage()
     next = () => table.nextPage()
   } else {
@@ -52,47 +91,53 @@ export function DataTablePagination<TData>({
     canPrevious = table.canPrevious ?? false
     canNext = table.canNext ?? false
     setPageIndex = table.setPageIndex
-    setPageSize = table.setPageSize
     previous = table.previousPage
     next = table.nextPage
   }
 
   return (
-    <div className="flex items-center justify-between px-2">
+    <div className={cn("flex items-center justify-between px-2", className)}>
       {/* <div className="text-muted-foreground flex-1 text-sm">
         {table.getFilteredSelectedRowModel().rows.length} of{" "}
         {table.getFilteredRowModel().rows.length} row(s) selected.
       </div> */}
       <div className="flex items-center space-x-6 lg:space-x-8">
-        {/* <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
-          <Select
-            value={`${table.getState().pagination.pageSize}`}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value))
-            }}
-          >
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={table.getState().pagination.pageSize} />
-            </SelectTrigger>
-            <SelectContent side="top">
-              {[10, 20, 25, 30, 40, 50].map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`}>
-                  {pageSize}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div> */}
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {pageIndex + 1} of {pageCount}
-        </div>
+        {showPageJump && (
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium">Page</span>
+            <Input
+              aria-label="Go to page"
+              className="w-16 h-8"
+              value={String(pageIndex + 1)}
+              onChange={(e) => {
+                const page = Number(e.target.value)
+                if (!Number.isNaN(page) && page >= 1 && page <= pageCount && setPageIndex) {
+                  setPageIndex(page - 1) // convert to 0-based
+                }
+              }}
+              onBlur={(e) => {
+                const page = Number(e.target.value)
+                if (!Number.isNaN(page) && page >= 1 && page <= pageCount && setPageIndex) {
+                  setPageIndex(page - 1) // convert to 0-based
+                }
+              }}
+            />
+            <span className="text-sm text-muted-foreground">of {pageCount}</span>
+          </div>
+        )}
+        
+        {!showPageJump && (
+          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+            Page {pageIndex + 1} of {pageCount}
+          </div>
+        )}
+
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
             size="icon"
             className="hidden size-8 lg:flex"
-            onClick={() => table?.setPageIndex(0)}
+            onClick={() => setPageIndex?.(0)}
             disabled={!canPrevious}
           >
             <span className="sr-only">Go to first page</span>
@@ -102,7 +147,7 @@ export function DataTablePagination<TData>({
             variant="outline"
             size="icon"
             className="size-8"
-            onClick={() => table?.previousPage()}
+            onClick={() => previous?.()}
             disabled={!canPrevious}
           >
             <span className="sr-only">Go to previous page</span>
@@ -112,7 +157,7 @@ export function DataTablePagination<TData>({
             variant="outline"
             size="icon"
             className="size-8"
-            onClick={() => table?.nextPage()}
+            onClick={() => next?.()}
             disabled={!canNext}
           >
             <span className="sr-only">Go to next page</span>
@@ -122,7 +167,7 @@ export function DataTablePagination<TData>({
             variant="outline"
             size="icon"
             className="hidden size-8 lg:flex"
-            onClick={() => table?.setPageIndex((table?.getPageCount() ?? 1) - 1)}
+            onClick={() => setPageIndex?.((pageCount || 1) - 1)}
             disabled={!canNext}
           >
             <span className="sr-only">Go to last page</span>

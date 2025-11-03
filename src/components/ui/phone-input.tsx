@@ -35,7 +35,8 @@ const countryCodes = [
 ];
 
 export function PhoneInput({ value = '', onChange, placeholder = 'Enter phone number', className, name, schema, onValidation, error: propsError }: PhoneInputProps) {
-  const [countryCode, setCountryCode] = React.useState('+1');
+  // default to Sri Lanka country code +94
+  const [countryCode, setCountryCode] = React.useState('+94');
   const [phoneNumber, setPhoneNumber] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
 

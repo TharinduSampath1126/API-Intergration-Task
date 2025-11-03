@@ -1,9 +1,9 @@
-import { DataTable } from '@/components/data-table/data-table';
 import { columns, User } from '@/components/data-table/columns';
+import { DataTable } from '@/components/data-table/data-table';
+import RowsPerPageSelect from '@/components/customUi/rows-per-page-select';
 import { usePostStore } from '@/store/postStore';
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import RowsPerPageSelect from '@/components/customUi/rows-per-page-select';
 import { DataTablePagination } from '@/components/customUi/pagination';
 import { Button } from '@/components/ui/button';
 import { UserForm } from '@/components/form/add-post-form';
@@ -21,6 +21,9 @@ export default function NewlyAddedUsersTable({ data, onAddData }: Props) {
   const [successOpen, setSuccessOpen] = React.useState(false);
 
   const [table, setTable] = React.useState<any | null>(null);
+  // pagination state (data-driven)
+  const [currentPage, setCurrentPage] = React.useState(0);
+  const [pageSize, setPageSize] = React.useState(10);
 
   const getColumn = React.useCallback(
     (id: string) => {
@@ -88,7 +91,13 @@ export default function NewlyAddedUsersTable({ data, onAddData }: Props) {
           />
         </div>
 
-        <DataTablePagination table={table} />
+        <DataTablePagination
+          data={data ?? newPosts ?? []}
+          pageSize={pageSize}
+          pageIndex={currentPage}
+          onPageChange={setCurrentPage}
+          showPageJump={true}
+        />
       </div>
     </div>
   );

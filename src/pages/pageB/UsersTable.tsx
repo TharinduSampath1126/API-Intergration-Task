@@ -17,8 +17,16 @@ export default function UsersTable({ data }: Props) {
   const [table, setTable] = React.useState<any | null>(null);
   const [successOpen, setSuccessOpen] = React.useState(false);
 
+  // State for data-based pagination
+  const [currentPage, setCurrentPage] = React.useState(0);
+  const [pageSize] = React.useState(10);
+
+  // Get the actual data array for pagination
+  const actualData = data ?? apiData ?? [];
+
   // helper to support both the raw TanStack table instance and the
   // wrapper API object we pass from DataTable (which contains a `table` field).
+
   const getColumn = React.useCallback(
     (id: string) => {
       if (!table) return undefined;
@@ -30,11 +38,44 @@ export default function UsersTable({ data }: Props) {
     [table]
   );
 
+  // Build a lightweight columns array for the dropdown and a toggle handler
+  const dropdownColumns = React.useMemo(() => {
+    return columns.map((col: any) => {
+      const id = col.id ?? col.accessorKey;
+      const label = typeof col.header === 'string' ? col.header : id;
+      const isVisible = getColumn(id)?.getIsVisible?.() ?? true;
+      return { id, label, isVisible };
+    });
+    // include `table` because visibility is read from it when available
+  }, [columns, table, getColumn]);
+
+  const handleToggleColumn = React.useCallback(
+    (id: string, visible: boolean) => {
+      // Prefer the table API if available
+      const col = getColumn(id);
+      if (col?.toggleVisibility) {
+        col.toggleVisibility(visible);
+        return;
+      }
+
+      // Fallback to setColumnVisibility if provided on the table wrapper
+      if (table?.setColumnVisibility) {
+        table.setColumnVisibility(id, visible);
+        return;
+      }
+      if (table?.table?.setColumnVisibility) {
+        table.table.setColumnVisibility(id, visible);
+        return;
+      }
+    },
+    [table, getColumn]
+  );
+
   return (
-    <div className="mb-8">
+    <div className="">
       <h2 className="mb-4 text-2xl font-bold">Users Data</h2>
 
-      <div className="flex">
+      <div className="mb-5 flex">
         <Input
           placeholder="Filter names..."
           value={(getColumn('firstName')?.getFilterValue() as string) ?? ''}
@@ -44,17 +85,16 @@ export default function UsersTable({ data }: Props) {
           className="max-w-sm"
         />
 
-        <TableColumnsDropdown table={table} />
+        <TableColumnsDropdown
+          columns={dropdownColumns}
+          onToggleColumn={handleToggleColumn}
+        />
       </div>
 
       <SuccessAlert open={successOpen} onOpenChange={setSuccessOpen} />
 
-      {/* Do NOT pass onAddData here — Add button should only appear on the Newly Added page */}
-      <DataTable
-        columns={columns}
-        data={data ?? apiData ?? []}
-        onTableChange={setTable}
-      />
+      <DataTable columns={columns} data={actualData} onTableChange={setTable} />
+
       <div className="flex items-center justify-between py-4">
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Rows per page</p>
@@ -64,8 +104,13 @@ export default function UsersTable({ data }: Props) {
             className="h-8 w-[70px]"
           />
         </div>
-
-        <DataTablePagination table={table} />
+        <DataTablePagination
+          data={actualData}
+          pageSize={pageSize}
+          pageIndex={currentPage}
+          onPageChange={setCurrentPage}
+          showPageJump={true}
+        />
       </div>
     </div>
   );
