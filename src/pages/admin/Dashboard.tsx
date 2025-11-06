@@ -2,12 +2,18 @@ import * as React from 'react';
 import { Users, BarChart2, Zap, Package, TrendingUp, Activity, UserPlus, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useUsers } from '@/hooks/useUserQueries';
+import { useProducts } from '@/hooks/useProductQueries';
 import { usePostStore } from '@/store/postStore';
 import { Button } from '@/components/ui/button';
+
+// Chart imports
+import 'chart.js/auto';
+import { Bar, Doughnut } from 'react-chartjs-2';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { data: users = [], isLoading } = useUsers();
+  const { data: products = [], isLoading: productsLoading } = useProducts();
   const newPosts = usePostStore((s) => s.newPosts);
 
   // Combine persisted newly-added users (from local store) with fetched users,
@@ -18,6 +24,141 @@ export default function AdminDashboard() {
     const others = (users || []).filter((u: any) => !existingIds.has(u.id));
     return [...(newPosts || []), ...others];
   }, [users, newPosts]);
+
+  // Chart data generation helpers
+
+  // Products by category chart data
+  const productCategoryData = React.useMemo(() => {
+    if (!products || products.length === 0) {
+      // Fallback data when no products loaded
+      return {
+        labels: ['Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Books', 'Other'],
+        datasets: [
+          {
+            data: [25, 20, 15, 12, 10, 8],
+            backgroundColor: [
+              'rgba(59,130,246,0.8)',
+              'rgba(16,185,129,0.8)', 
+              'rgba(245,158,11,0.8)',
+              'rgba(239,68,68,0.8)',
+              'rgba(139,92,246,0.8)',
+              'rgba(156,163,175,0.8)',
+            ],
+            borderWidth: 0,
+          },
+        ],
+      };
+    }
+
+    // Group products by category
+    const categoryCount = products.reduce((acc: any, product: any) => {
+      const category = product.category || 'Other';
+      acc[category] = (acc[category] || 0) + 1;
+      return acc;
+    }, {});
+
+    const categories = Object.keys(categoryCount);
+    const counts = Object.values(categoryCount);
+    const colors = [
+      'rgba(59,130,246,0.8)', 'rgba(16,185,129,0.8)', 'rgba(245,158,11,0.8)',
+      'rgba(239,68,68,0.8)', 'rgba(139,92,246,0.8)', 'rgba(156,163,175,0.8)',
+      'rgba(236,72,153,0.8)', 'rgba(14,165,233,0.8)'
+    ];
+
+    return {
+      labels: categories,
+      datasets: [
+        {
+          data: counts,
+          backgroundColor: colors.slice(0, categories.length),
+          borderWidth: 0,
+        },
+      ],
+    };
+  }, [products]);
+
+  // Product price ranges chart data
+  const productPriceData = React.useMemo(() => {
+    if (!products || products.length === 0) {
+      return {
+        labels: ['$0-50', '$50-100', '$100-200', '$200-500', '$500+'],
+        datasets: [
+          {
+            label: 'Products Count',
+            data: [15, 25, 30, 20, 10],
+            backgroundColor: 'rgba(16,185,129,0.8)',
+            borderColor: 'rgba(16,185,129,1)',
+            borderWidth: 1,
+          },
+        ],
+      };
+    }
+
+    const priceRanges = {
+      '$0-50': 0,
+      '$50-100': 0, 
+      '$100-200': 0,
+      '$200-500': 0,
+      '$500+': 0,
+    };
+
+    products.forEach((product: any) => {
+      const price = product.price || 0;
+      if (price <= 50) priceRanges['$0-50']++;
+      else if (price <= 100) priceRanges['$50-100']++;
+      else if (price <= 200) priceRanges['$100-200']++;
+      else if (price <= 500) priceRanges['$200-500']++;
+      else priceRanges['$500+']++;
+    });
+
+    return {
+      labels: Object.keys(priceRanges),
+      datasets: [
+        {
+          label: 'Products Count',
+          data: Object.values(priceRanges),
+          backgroundColor: 'rgba(16,185,129,0.8)',
+          borderColor: 'rgba(16,185,129,1)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [products]);
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: false,
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+      },
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(15,23,42,0.04)',
+        },
+      },
+    },
+  };
+
+  const doughnutOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          padding: 20,
+          usePointStyle: true,
+        },
+      },
+    },
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -116,6 +257,36 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Analytics Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-slate-800 flex items-center">
+              <Package className="w-5 h-5 mr-2 text-green-600" />
+              Product Categories
+            </h3>
+            <p className="text-sm text-slate-500">Distribution</p>
+          </div>
+          <div className="h-64">
+            <Doughnut data={productCategoryData} options={doughnutOptions} />
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl w-full mx-auto ">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-slate-800 flex items-center">
+              <BarChart2 className="w-5 h-5 mr-2 text-green-600" />
+              Product Price Ranges
+            </h3>
+            <p className="text-sm text-slate-500">Price distribution</p>
+          </div>
+          <div className="h-64">
+            <Bar data={productPriceData} options={chartOptions} />
+          </div>
+        </div>
+      </div>
+
+      
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

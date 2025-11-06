@@ -12,8 +12,11 @@ export interface Product {
   description: string;
 }
 
-// Base API configuration
-const API_BASE_URL = 'https://dummyjson.com/products';
+// Base API configuration from secret environment variables
+const API_BASE_URL = import.meta.env.VITE_SECRET_API_BASE_URL || 'https://dummyjson.com';
+
+// Debug: Secret URL එක console එකේ පේනවා!
+console.log('🔍 Secret API URL:', API_BASE_URL);
 
 // Product API functions
 export async function fetchProducts(): Promise<Product[]> {
